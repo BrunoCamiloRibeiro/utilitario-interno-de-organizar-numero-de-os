@@ -1,0 +1,72 @@
+site_name: Formatador de OS - SMAURB
+site_description: Documentação Oficial Técnica e de Usuário do Utilitário de OS
+site_author: Bruno Camilo Ribeiro
+docs_dir: .
+site_dir: ../site
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Mudar para modo escuro
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Mudar para modo claro
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Início: README.md
+  - Manual do Usuário:
+      - Primeiros Passos: usuario/01_primeiros_passos.md
+      - Guias por Tarefa: usuario/02_guias_por_tarefa.md
+      - Referência da Interface: usuario/03_referencia_interface.md
+      - Explicações Conceituais: usuario/04_explicacoes_conceituais.md
+      - Solução de Problemas: usuario/05_solucao_de_problemas.md
+      - Instalação e FAQ: usuario/06_instalacao_e_faq.md
+  - Documentação Técnica:
+      - 01. Visão Geral e Escopo: tecnica/01_visao_geral_e_escopo.md
+      - 02. Arquitetura e Componentes: tecnica/02_arquitetura_c4_e_componentes.md
+      - 03. Visão de Execução: tecnica/03_visao_execucao_fluxos.md
+      - 04. Modelo de Dados e Protocolos: tecnica/04_modelo_dados_e_protocolos.md
+      - 05. Referência de Módulos e APIs: tecnica/05_referencia_modulos_e_apis.md
+      - 06. Build e Dependências: tecnica/06_ambiente_build_e_dependencias.md
+      - 07. Estratégia de Testes: tecnica/07_estrategia_testes_e_cobertura.md
+      - 08. Decisões de Arquitetura: tecnica/08_decisoes_arquitetura_adrs.md
+      - 09. Requisitos e Rastreabilidade: tecnica/09_requisitos_e_rastreabilidade.md
+      - 10. Riscos e Limitações: tecnica/10_riscos_divida_tecnica_e_limitacoes.md
+      - 11. Glossário: tecnica/11_glossario.md
+  - Governança e Qualidade:
+      - Registro de Lacunas: LACUNAS.md
+      - Relatório de Cobertura: COBERTURA.md
+      - Revisão e Teste a Frio: REVISAO.md

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formatador de OS</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #212529;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 960px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e9ecef;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f1f3f5;
+      padding-bottom: 16px;
+    }
+
+    .card-header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a1d20;
+      letter-spacing: -0.01em;
+    }
+
+    .counter {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #6c757d;
+      background-color: #f1f3f5;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    textarea {
+      width: 100%;
+      height: 280px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #212529;
+      background-color: #ffffff;
+      resize: vertical;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    }
+
+    textarea:read-only {
+      background-color: #f8f9fa;
+      color: #495057;
+      cursor: default;
+    }
+
+    textarea:read-only:focus {
+      border-color: #dee2e6;
+      box-shadow: none;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 9px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background-color: #0d6efd;
+      color: #ffffff;
+      border-color: #0d6efd;
+    }
+
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+      border-color: #0a58ca;
+    }
+
+    .btn-primary:active {
+      background-color: #0a58ca;
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #212529;
+      border-color: #ced4da;
+    }
+
+    .btn-secondary:hover {
+      background-color: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .btn-secondary.copied {
+      background-color: #e8f5e9;
+      color: #1b5e20;
+      border-color: #a5d6a7;
+    }
+
+    .btn-clear {
+      background-color: transparent;
+      color: #6c757d;
+      border-color: transparent;
+      margin-left: auto;
+      padding: 9px 12px;
+    }
+
+    .btn-clear:hover {
+      background-color: #e9ecef;
+      color: #343a40;
+    }
+
+    @media (max-width: 680px) {
+      .card {
+        padding: 20px;
+      }
+
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-clear {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .actions button {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="card">
+    <header class="card-header">
+      <h1>Formatador de OS</h1>
+      <span class="counter" id="countBadge">0 OSs</span>
+    </header>
+
+    <div class="grid-container">
+      <div class="field-group">
+        <label for="inputData" class="field-label">Entrada</label>
+        <textarea id="inputData" placeholder="Cole aqui o texto contendo as Ordens de Serviço..." spellcheck="false"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label for="outputData" class="field-label">Saída</label>
+        <textarea id="outputData" readonly placeholder="O resultado aparecerá aqui..." spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-primary" id="btnFormat">Formatar</button>
+      <button type="button" class="btn-secondary" id="btnCopy">Copiar</button>
+      <button type="button" class="btn-clear" id="btnClear">Limpar</button>
+    </div>
+  </main>
+
+  <script>
+    const inputEl = document.getElementById('inputData');
+    const outputEl = document.getElementById('outputData');
+    const btnFormat = document.getElementById('btnFormat');
+    const btnCopy = document.getElementById('btnCopy');
+    const btnClear = document.getElementById('btnClear');
+    const countBadge = document.getElementById('countBadge');
+
+    let copyTimeout = null;
+
+    function processOrders() {
+      const rawText = inputEl.value;
+      const matches = rawText.match(/\b\d{6}\b/g);
+
+      if (matches && matches.length > 0) {
+        outputEl.value = matches.join(';');
+        const total = matches.length;
+        countBadge.textContent = `${total} OS${total === 1 ? '' : 's'}`;
+      } else {
+        outputEl.value = '';
+        countBadge.textContent = '0 OSs';
+      }
+    }
+
+    async function copyToClipboard() {
+      const textToCopy = outputEl.value;
+      if (!textToCopy) return;
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+      } catch {
+        outputEl.select();
+        document.execCommand('copy');
+      }
+
+      clearTimeout(copyTimeout);
+      const originalText = 'Copiar';
+      btnCopy.textContent = 'Copiado!';
+      btnCopy.classList.add('copied');
+
+      copyTimeout = setTimeout(() => {
+        btnCopy.textContent = originalText;
+        btnCopy.classList.remove('copied');
+      }, 1500);
+    }
+
+    function clearFields() {
+      inputEl.value = '';
+      outputEl.value = '';
+      countBadge.textContent = '0 OSs';
+      inputEl.focus();
+    }
+
+    inputEl.addEventListener('input', processOrders);
+    btnFormat.addEventListener('click', processOrders);
+    btnCopy.addEventListener('click', copyToClipboard);
+    btnClear.addEventListener('click', clearFields);
+  </script>
+</body>
+</html>
