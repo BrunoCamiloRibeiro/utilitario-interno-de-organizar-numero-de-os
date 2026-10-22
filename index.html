@@ -225,51 +225,205 @@
   </main>
 
   <script>
+    /**
+     * @fileoverview Módulo de controle e processamento de Ordens de Serviço (OS).
+     * Aplicação cliente pura (Single-Page Utility) desenvolvida para a SMAURB.
+     * Realiza a extração determinística de sequências numéricas de 6 dígitos decimais
+     * e formata a saída delimitada por ponto e vírgula para integração com sistemas legados.
+     *
+     * @author Bruno Camilo Ribeiro
+     * @version 1.0.0
+     */
+
+    /**
+     * Referência ao elemento textarea de entrada de texto do usuário.
+     * Recebe texto bruto contendo anotações fiscais e números de OS heterogêneos.
+     * @type {HTMLTextAreaElement}
+     */
     const inputEl = document.getElementById('inputData');
+
+    /**
+     * Referência ao elemento textarea de saída formatada.
+     * Configurado com atributo readonly para impedir edição manual pelo operador.
+     * @type {HTMLTextAreaElement}
+     */
     const outputEl = document.getElementById('outputData');
+
+    /**
+     * Botão para acionamento manual do processamento de formatação.
+     * Funcionalmente redundante quando o evento 'input' está habilitado,
+     * mas mantido para garantia de usabilidade e disparos sem evento de teclado.
+     * @type {HTMLButtonElement}
+     */
     const btnFormat = document.getElementById('btnFormat');
+
+    /**
+     * Botão para transferir o conteúdo da saída para a área de transferência.
+     * Implementa feedback visual temporário via classe CSS '.copied'.
+     * @type {HTMLButtonElement}
+     */
     const btnCopy = document.getElementById('btnCopy');
+
+    /**
+     * Botão de reset do formulário.
+     * Esvazia entradas, saídas, redefine o badge e retorna o foco para inputEl.
+     * @type {HTMLButtonElement}
+     */
     const btnClear = document.getElementById('btnClear');
+
+    /**
+     * Elemento de destaque visual (badge) no cabeçalho do card.
+     * Exibe a contagem de OSs extraídas com flexão correta de singular/plural.
+     * @type {HTMLSpanElement}
+     */
     const countBadge = document.getElementById('countBadge');
 
+    /**
+     * Identificador do temporizador ativo de restauração visual do botão de cópia.
+     * Armazena o ID retornado por window.setTimeout para permitir cancelamento prévio
+     * via clearTimeout caso o operador clique repetidamente em copiar.
+     * @type {number|null}
+     */
     let copyTimeout = null;
 
+    /**
+     * Extrai números de Ordens de Serviço (OS) com exatamente 6 dígitos do campo de entrada,
+     * concatena os resultados usando ponto e vírgula como delimitador e atualiza o badge de contagem.
+     *
+     * Propósito e Papel no Sistema:
+     * Constitui o núcleo de negócio da ferramenta. Transforma relatórios textuais desestruturados
+     * em listas delimitadas prontas para uso em filtros de sistemas administrativos municipais.
+     *
+     * Parâmetros:
+     * Nenhum (consome diretamente o valor da propriedade value do nó global inputEl).
+     *
+     * Retorno:
+     * @returns {void} Não possui valor de retorno.
+     *
+     * Efeitos Colaterais:
+     * - Muta a propriedade `outputEl.value` com os números casados unidos por ';' ou com string vazia.
+     * - Muta a propriedade `countBadge.textContent` para refletir o total de OSs ("1 OS", "N OSs" ou "0 OSs").
+     *
+     * Pré-condições e Invariantes:
+     * - Os elementos inputEl, outputEl e countBadge devem estar inicializados no DOM.
+     * - O processamento é síncrono e executado na thread principal de interface (UI thread).
+     *
+     * Complexidade Temporal e Espacial:
+     * - Temporal: O(N), onde N é o comprimento do texto contido em inputEl.value (varredura regex linear).
+     * - Espacial: O(M), onde M é a quantidade de correspondências encontradas armazenadas em array.
+     *
+     * Contexto de Chamada:
+     * Invocada como ouvinte do evento 'input' em inputEl e do evento 'click' em btnFormat.
+     *
+     * Armadilhas e Decisões de Design (Auditadas):
+     * - [LIDO NO CÓDIGO] Não há chamada a `.sort()`. Os números são emitidos estritamente na ordem em que
+     *   aparecem no texto de entrada, apesar de o repositório chamar-se "Projeto Ordenação OS".
+     * - [INTENÇÃO NÃO CONFIRMADA] A ausência de ordenação e de deduplicação (números repetidos aparecem
+     *   duplicados na saída) não possui justificativa explícita no histórico do commit ad56c8b. Pode
+     *   ter sido desenhada para auditoria sequencial ou ser uma funcionalidade pendente.
+     * - [LIDO NO CÓDIGO] A expressão regular `/\b\d{6}\b/g` exige exatamente 6 dígitos contínuos. Números
+     *   de 5 dígitos (ex: 12345) ou 7 dígitos (ex: 1234567) são sumariamente ignorados.
+     */
     function processOrders() {
+      // Lê o valor bruto colado ou digitado no campo de entrada
       const rawText = inputEl.value;
+      // Varre o texto buscando sequências de 6 dígitos decimais isoladas por fronteiras de palavra
       const matches = rawText.match(/\b\d{6}\b/g);
 
       if (matches && matches.length > 0) {
+        // Concatena sem espaços adicionais e sem delimitador ao final
         outputEl.value = matches.join(';');
         const total = matches.length;
+        // Aplica concordância gramatical: "1 OS" (singular) ou "N OSs" (plural)
         countBadge.textContent = `${total} OS${total === 1 ? '' : 's'}`;
       } else {
+        // Restaura saída e contador para o estado padrão vazio
         outputEl.value = '';
         countBadge.textContent = '0 OSs';
       }
     }
 
+    /**
+     * Copia o texto formatado presente no campo de saída para a área de transferência do sistema
+     * operacional e fornece resposta visual temporária no botão de cópia.
+     *
+     * Propósito e Papel no Sistema:
+     * Canal de exportação de dados para o fluxo de trabalho do operador, permitindo transferir
+     * os números formatados diretamente para planilhas ou caixas de busca de ERPs.
+     *
+     * Parâmetros:
+     * Nenhum (consome diretamente o valor da propriedade value de outputEl).
+     *
+     * Retorno:
+     * @async
+     * @returns {Promise<void>} Promise resolvida após a gravação no clipboard ou execução do fallback.
+     *
+     * Efeitos Colaterais:
+     * - Acessa o subsistema de área de transferência do sistema operacional.
+     * - Muta `btnCopy.textContent` para 'Copiado!' durante 1.500ms.
+     * - Muta `btnCopy.classList` adicionando e removendo a classe CSS '.copied'.
+     * - Limpa e agenda um temporizador em `copyTimeout`.
+     *
+     * Tratamento de Erros e Contingência:
+     * - Se outputEl.value for vazio, a função encerra imediatamente via return antecipado sem efeito colateral.
+     * - Se a API assíncrona `navigator.clipboard.writeText` for rejeitada (por contexto inseguro file://
+     *   ou ausência de permissões do navegador), o bloco catch seleciona o texto de outputEl e executa
+     *   o comando síncrono legado `document.execCommand('copy')`.
+     *
+     * Contexto de Chamada:
+     * Disparada pelo evento 'click' no elemento btnCopy.
+     *
+     * Decisão Técnica:
+     * - [LIDO NO CÓDIGO] O cancelamento via `clearTimeout(copyTimeout)` impede sobreposição de timers caso
+     *   o usuário clique repetidas vezes no botão antes de decorridos os 1500 milissegundos.
+     */
     async function copyToClipboard() {
       const textToCopy = outputEl.value;
+      // Trava de segurança: impede transferir string vazia para a área de transferência
       if (!textToCopy) return;
 
       try {
+        // Tentativa primária através da W3C Asynchronous Clipboard API
         await navigator.clipboard.writeText(textToCopy);
       } catch {
+        // Contingência para navegadores restritos ou protocolo file:// local
         outputEl.select();
         document.execCommand('copy');
       }
 
+      // Reinicia temporizador anterior se o botão for clicado repetidamente
       clearTimeout(copyTimeout);
       const originalText = 'Copiar';
       btnCopy.textContent = 'Copiado!';
       btnCopy.classList.add('copied');
 
+      // Restaura o rótulo original e remove a classe de sucesso após 1500 milissegundos
       copyTimeout = setTimeout(() => {
         btnCopy.textContent = originalText;
         btnCopy.classList.remove('copied');
       }, 1500);
     }
 
+    /**
+     * Redefine todos os campos do formulário para o estado inicial e devolve o foco do cursor.
+     *
+     * Propósito e Papel no Sistema:
+     * Prepara a interface para um novo ciclo de trabalho sem necessidade de recarregar a página.
+     *
+     * Parâmetros:
+     * Nenhum.
+     *
+     * Retorno:
+     * @returns {void} Não possui valor de retorno.
+     *
+     * Efeitos Colaterais:
+     * - Limpa o valor de `inputEl.value` e `outputEl.value`.
+     * - Restaura `countBadge.textContent` para '0 OSs'.
+     * - Transfere o foco ativo do documento para `inputEl` chamando `inputEl.focus()`.
+     *
+     * Contexto de Chamada:
+     * Invocada pelo evento 'click' no elemento btnClear.
+     */
     function clearFields() {
       inputEl.value = '';
       outputEl.value = '';
@@ -277,9 +431,14 @@
       inputEl.focus();
     }
 
+    // Registro dos ouvintes de eventos da interface
+    // Processamento automático em tempo real durante colagem ou digitação
     inputEl.addEventListener('input', processOrders);
+    // Disparo manual de formatação via botão primário
     btnFormat.addEventListener('click', processOrders);
+    // Disparo de cópia assíncrona com feedback
     btnCopy.addEventListener('click', copyToClipboard);
+    // Reset completo de formulário
     btnClear.addEventListener('click', clearFields);
   </script>
 </body>

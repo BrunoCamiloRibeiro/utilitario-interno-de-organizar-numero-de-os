@@ -1,3 +1,11 @@
+"""Suíte de Testes End-to-End (E2E) para o Formatador de OS.
+
+Exercita o arquivo real index.html em um navegador Google Chrome headless,
+validando todas as interações de usuário, especificações de fronteira da
+expressão regular, concordância do contador, operações de cópia, limpeza e
+responsividade de layout.
+"""
+
 import os
 import time
 import pytest
@@ -8,6 +16,12 @@ from selenium.webdriver.common.by import By
 
 @pytest.fixture(scope="module")
 def driver():
+    """Inicialize e encerre a instância do Google Chrome em modo headless.
+
+    Yields:
+        selenium.webdriver.chrome.webdriver.WebDriver: Instância ativa do Chrome
+        navegando no arquivo local index.html.
+    """
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
@@ -23,6 +37,11 @@ def driver():
 
 
 def test_initial_page_state(driver):
+    """Valide o estado inicial da interface ao carregar a página.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     assert driver.title == "Formatador de OS"
 
     input_el = driver.find_element(By.ID, "inputData")
@@ -47,6 +66,11 @@ def test_initial_page_state(driver):
 
 
 def test_extraction_on_input_event(driver):
+    """Valide a extração e formatação automática acionada pelo evento input.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
     badge = driver.find_element(By.ID, "countBadge")
@@ -63,6 +87,11 @@ def test_extraction_on_input_event(driver):
 
 
 def test_singular_plural_badge(driver):
+    """Valide a concordância gramatical singular e plural do badge contador.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
     badge = driver.find_element(By.ID, "countBadge")
@@ -79,6 +108,11 @@ def test_singular_plural_badge(driver):
 
 
 def test_regex_boundary_and_length_rules(driver):
+    """Valide as regras de fronteira de palavra e tamanho de dígitos da regex.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
     badge = driver.find_element(By.ID, "countBadge")
@@ -100,9 +134,10 @@ def test_regex_boundary_and_length_rules(driver):
 
 
 def test_non_sorting_and_non_deduplication(driver):
-    """
-    CRITICAL BEHAVIOR:
-    The tool is named 'Projeto Ordenação OS', but in code it does NOT sort and does NOT deduplicate.
+    """Valide a preservação da ordem original e a manutenção de repetições.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
     """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
@@ -117,6 +152,11 @@ def test_non_sorting_and_non_deduplication(driver):
 
 
 def test_format_button_click(driver):
+    """Valide o acionamento de extração através do clique no botão Formatar.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
     btn_format = driver.find_element(By.ID, "btnFormat")
@@ -135,6 +175,11 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def test_copy_button_and_feedback(driver):
+    """Valide a cópia assíncrona para o clipboard e o ciclo de feedback visual.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     btn_copy = driver.find_element(By.ID, "btnCopy")
     output_el = driver.find_element(By.ID, "outputData")
 
@@ -155,6 +200,11 @@ def test_copy_button_and_feedback(driver):
 
 
 def test_clear_button(driver):
+    """Valide o reset completo do formulário e o retorno do foco ao input.
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     input_el = driver.find_element(By.ID, "inputData")
     output_el = driver.find_element(By.ID, "outputData")
     btn_clear = driver.find_element(By.ID, "btnClear")
@@ -171,6 +221,11 @@ def test_clear_button(driver):
 
 
 def test_responsive_mobile_viewport(driver):
+    """Valide a renderização e empilhamento do layout sob viewport móvel (480px).
+
+    Args:
+        driver: Instância do WebDriver navegando no index.html.
+    """
     driver.set_window_size(480, 800)
     btn_clear = driver.find_element(By.ID, "btnClear")
     # In mobile media query (@media max-width: 680px), btn-clear width is 100% or margins adjusted

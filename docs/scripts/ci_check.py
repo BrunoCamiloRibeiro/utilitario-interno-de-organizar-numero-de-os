@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""
-Script de CI e Verificação de Integridade da Documentação e Exemplos
-Projeto: Formatador de OS (SMAURB)
+"""Script de CI e Verificação de Integridade da Documentação e Exemplos.
+
+Executa a auditoria automatizada do repositório garantindo que:
+1. Todos os links internos nos arquivos Markdown sejam válidos e existam no disco.
+2. Todos os testes de regressão E2E via pytest passem com sucesso.
+3. A compilação do site estático via MkDocs seja executada em modo estrito (--strict).
 """
 
 import os
@@ -11,6 +14,13 @@ import subprocess
 
 
 def log(msg, status="INFO"):
+    """Emita mensagens formatadas no console com cores ANSI.
+
+    Args:
+        msg (str): Mensagem descritiva a ser exibida no terminal.
+        status (str): Categoria da mensagem ("INFO", "PASS", "FAIL", "WARN").
+            Define a cor de destaque do prefixo.
+    """
     colors = {
         "INFO": "\033[94m",
         "PASS": "\033[92m",
@@ -22,8 +32,23 @@ def log(msg, status="INFO"):
 
 
 def check_markdown_links(docs_dir):
-    """
-    Varre todos os arquivos markdown e verifica se os links relativos apontam para arquivos existentes.
+    """Varre arquivos markdown e valida a existência física dos alvos de links.
+
+    Propósito e Papel no Sistema:
+        Garante a integridade referencial de toda a documentação gerada em
+        docs/, prevenindo links quebrados (404) no site compilado e no
+        repositório.
+
+    Args:
+        docs_dir (str): Caminho absoluto para a pasta raiz de documentação
+            contendo os arquivos .md.
+
+    Returns:
+        bool: True se todos os links apontarem para arquivos válidos existentes;
+        False se houver um ou mais links quebrados.
+
+    Side Effects:
+        Imprime mensagens de log e lista de erros encontrados no stdout.
     """
     log("Iniciando verificação de integridade de links markdown...", "INFO")
     link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
@@ -75,8 +100,18 @@ def check_markdown_links(docs_dir):
 
 
 def run_e2e_tests():
-    """
-    Executa a suíte de testes de regressão E2E via pytest.
+    """Executa a suíte de testes de regressão E2E via subprocesso pytest.
+
+    Propósito e Papel no Sistema:
+        Valida a integridade funcional da aplicação executando testes com
+        Selenium e Chrome Headless sobre o arquivo index.html.
+
+    Returns:
+        bool: True se todos os testes passarem (código de saída 0); False se
+        ocorrer falha em qualquer teste.
+
+    Side Effects:
+        Invoca o pytest em subprocesso e emite saídas para stdout/stderr.
     """
     log("Executando suíte de testes E2E e validação dos exemplos...", "INFO")
     test_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "tests", "test_e2e.py"))
@@ -95,8 +130,19 @@ def run_e2e_tests():
 
 
 def run_mkdocs_strict():
-    """
-    Compila a documentação com o MkDocs no modo estrito (--strict).
+    """Compila a documentação com o MkDocs no modo estrito (--strict).
+
+    Propósito e Papel no Sistema:
+        Assegura que a estrutura de navegação, metadados e sintaxe da
+        documentação estejam em total conformidade sem nenhum aviso do
+        compilador estático.
+
+    Returns:
+        bool: True se a compilação for concluída com código 0; False em caso de
+        erro.
+
+    Side Effects:
+        Gera os arquivos do site estático na pasta de saída configurada (site/).
     """
     log("Executando compilação MkDocs em modo estrito (--strict)...", "INFO")
     root_config = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "mkdocs.yml"))
@@ -117,6 +163,17 @@ def run_mkdocs_strict():
 
 
 def main():
+    """Ponto de entrada do script de Integração Contínua (CI).
+
+    Orquestra a execução sequencial das etapas de validação:
+    1. Validação de links markdown.
+    2. Execução dos testes E2E.
+    3. Compilação estrita do MkDocs.
+
+    Raises:
+        SystemExit: Encerra com código 0 em caso de sucesso total ou código 1
+            se qualquer uma das etapas falhar.
+    """
     docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     success = True
 
